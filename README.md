@@ -38,7 +38,32 @@ python -m http.server 8000
 
 **首页视觉**：`index.html` 有一层纯装饰的海洋背景（3 层不同速度的波浪 + 3 个呼吸光斑 + 9 个上浮气泡），只对 `transform` / `opacity` 做动画，不动布局；切到后台自动暂停、`prefers-reduced-motion` 下关闭、打印时隐藏；卡片与按钮只有 2px 以内的上浮和轻微缩放反馈。作答页（`structured.html` / `math.html`）保持静止，不加任何背景动效。
 
-## 三、AI 评分（可选）
+## 三、PWA：安装到桌面 / 离线使用
+
+本项目已具备 PWA 能力（纯静态实现，无需构建）：
+
+| 文件 | 作用 |
+| --- | --- |
+| `manifest.json` | 应用名「结构化面试 · 教资面试学习室」、短名「教资面试」、`display: standalone`、主题色 `#1d4ed8`、4 个图标（含 maskable）、3 个快捷方式（刷题 / 试讲 / 记录） |
+| `sw.js` | Service Worker：预缓存 9 个页面 + css/js/json/图标；页面 network-first、静态资源 stale-while-revalidate、`data/*.json` network-first；跨域请求与 Range 请求直接放行（AI 接口、B 站播放器、录音回放不受影响） |
+| `js/pwa.js` | 注册 Service Worker、新版本在页面隐藏时切换、捕获安装事件（不拦截浏览器自带的安装入口） |
+| `assets/img/*` | `icon-192/512`（any）、`icon-maskable-192/512`（安全区内）、`apple-touch-icon`（iOS）、`favicon.ico` / `favicon-32` |
+
+**安装（Chrome / Edge 桌面）**：用 `http://localhost:8000` 或 HTTPS 打开首页 → 地址栏右侧出现「安装」图标（或在菜单里选「安装 结构化面试 · 教资面试学习室」）。安装后以独立窗口运行，任务栏/开始菜单使用上面的图标。
+
+**安装（Android Chrome）**：地址栏下方/菜单中选择「安装应用」或「添加到主屏幕」；**iOS Safari** 用「分享 → 添加到主屏幕」（iOS 读 `apple-touch-icon`，不使用 manifest 的图标，但图标已一并提供）。
+
+**离线**：首次打开联网一次后，`index.html`、9 个页面、样式、脚本、题库 JSON 都会进入缓存，断网仍可打开页面、看模板、刷题、计时、本机规则评分；只有「AI 评分」需要联网，因为它要请求你配置的服务商接口。
+
+**手动触发安装**：控制台执行 `await window.pwa.install()`；`window.pwa.installable` 可判断当前是否具备安装条件。
+
+**发布到 GitHub Pages**：把整个目录（含 `manifest.json`、`sw.js`、`.nojekyll`）推到仓库 → Settings → Pages → 分支选 `main` / 目录选 `/ (root)` → 访问 `https://<用户名>.github.io/<仓库名>/`。所有路径都是相对路径，`scope` 自动落在子目录下，不需要改配置。⚠️ 必须是 HTTPS（GitHub Pages 默认支持）才能注册 Service Worker。
+
+**改了文件后**：
+- 只改业务/样式：SW 的静态资源策略会在后台自动更新缓存，刷新两次即生效。
+- 改了预缓存清单（增删页面、改文件名）：把 `sw.js` 顶部的 `CACHE_VERSION` 改成 `v2`，旧缓存会在下次激活时清掉，避免残留 404。
+
+## 四、AI 评分（可选）
 
 右上角齿轮 → 选择服务商（DeepSeek / 通义千问 / 智谱 GLM / OpenAI / 自定义 OpenAI 兼容端点）→ 填 API Key → “测试连接” → 保存。
 
@@ -46,17 +71,18 @@ python -m http.server 8000
 - **未配置或请求失败时自动降级为本机规则评分**（关键词覆盖 + 结构标志词 + 篇幅），结果卡会标注“本机规则评分”。
 - 本机规则评分只用于自查，不等于考官评分。
 
-## 四、目录
+## 五、目录
 
 ```
 index.html  structured-hub.html  structured-template.html  structured-list.html
 structured.html  math.html  select.html
 records.html  videos.html  start.cmd
 README.md
+manifest.json  sw.js  .nojekyll      PWA：应用清单 / Service Worker / GitHub Pages 免 Jekyll
 assets/
   css/app.css              组件样式、富文本、打印
   vendor/tailwind-play.js  Tailwind Play CDN（本地副本，可离线）
-  img/
+  img/                      PWA 图标：icon-192/512、icon-maskable-192/512、apple-touch-icon、favicon
 data/
   structured-questions.json  30 道结构化题（题面、参考要点、参考答案）
   structured-templates.json  五大题型模板 + 两套评分维度（structured / trial）
@@ -67,13 +93,14 @@ js/
   tailwind-config.js  utils.js  storage.js  data-loader.js
   timer.js  picker.js  recorder.js  template-store.js
   llm.js  settings.js  scoring.js
+  pwa.js                     Service Worker 注册 + 安装事件
   home.js  select-page.js  math-page.js
   structured-nav.js  structured-hub-page.js
   structured-template-page.js  structured-list-page.js  structured-page.js
   records-page.js  videos-page.js
 ```
 
-## 五、替换成自己的模板 / 题目
+## 六、替换成自己的模板 / 题目
 
 **方式 A：直接改 JSON（推荐，改动全局生效）**
 
@@ -87,7 +114,7 @@ js/
 **方式 B：页面内“我的模板”**（`template-store.js` 已提供读写接口，优先级：用户模板 > 内置）
 后续会接入编辑面板；接口为 `saveStructuredOverride(typeId, patch)` / `removeStructuredOverride(typeId)` 与试讲板块对应方法。
 
-## 六、录音与练习记录
+## 七、录音与练习记录
 
 **录音**（结构化页 / 试讲页的作答区；结构化固定 2 分钟，录音上限同样 2 分钟）
 
@@ -102,12 +129,12 @@ js/
 - 记录只在本机，清理站点数据会全部丢失。
 - 记录页（`records.html`）：顶部统计练习次数 / 平均分 / 最高分，按“全部 / 结构化 / 试讲”筛选并可在“最新优先 / 高分优先”间切换；每条卡片展示总分等级与权重最高的三个维度，展开后可见全部维度、当时作答，并提供“重做这道题”“删除这条”和底部“清空全部记录”。
 
-## 七、当前边界（骨架阶段）
+## 八、当前边界（骨架阶段）
 
-- 已实现：结构化题型一级页（模板 / 刷题分离）、题型模板页、按题型刷题列表、单题 2 分钟限时作答、录音与可选转写、AI 或本机六维评分、练习记录页（统计 / 筛选 / 排序 / 维度详情 / 重做 / 删除）、继续上次、示范视频页、设置面板。
-- 未实现：页面内编辑“我的模板”（`template-store.js` 的覆盖接口已就绪，缺编辑 UI）、PWA 离线。
+- 已实现：结构化题型一级页（模板 / 刷题分离）、题型模板页、按题型刷题列表、单题 2 分钟限时作答、录音与可选转写、AI 或本机六维评分、练习记录页（统计 / 筛选 / 排序 / 维度详情 / 重做 / 删除）、继续上次、示范视频页、设置面板、PWA 安装与离线缓存。
+- 未实现：页面内编辑“我的模板”（`template-store.js` 的覆盖接口已就绪，缺编辑 UI）。
 - 根目录 `card.html` 与本站无关，可忽略或删除。
 
-## 八、内容说明
+## 九、内容说明
 
 题目与模板整理自公开备考资料并做了改写，仅用于个人练习，不代表官方评分标准；示范答案不是唯一答案。

@@ -4,9 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>示范视频 · 教资面试学习室</title>
-<script src="tailwind-play.js"></script>
-<script src="tailwind-config.js"></script>
-<link rel="stylesheet" href="app.css">
+<script src="assets/vendor/tailwind-play.js"></script>
+<script src="js/tailwind-config.js"></script>
+<link rel="stylesheet" href="assets/css/app.css">
+<!-- PWA：可安装 + 离线（manifest / 图标；Service Worker 在 js/pwa.js 注册） -->
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="assets/img/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/img/apple-touch-icon.png">
+<meta name="application-name" content="结构化面试 · 教资面试学习室">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="教资面试学习室">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900">
   <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
@@ -30,7 +39,7 @@
     <p id="error-tip" class="mt-6 hidden rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs leading-relaxed text-rose-700"></p>
   </main>
 
-  <script type="module" src="videos-page.js"></script>
+  <script type="module" src="js/videos-page.js"></script>
+<script src="js/pwa.js"></script>
 </body>
 </html>
-

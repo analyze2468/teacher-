@@ -7,11 +7,11 @@
 const cache = new Map();
 
 export const DATA_PATHS = {
-  structuredQuestions: 'structured-questions.json',
-  structuredTemplates: 'structured-templates.json',
-  mathQuestions: 'math-questions.json',
-  mathOutline: 'math-outline.json',
-  videos: 'videos.json'
+  structuredQuestions: 'data/structured-questions.json',
+  structuredTemplates: 'data/structured-templates.json',
+  mathQuestions: 'data/math-questions.json',
+  mathOutline: 'data/math-outline.json',
+  videos: 'data/videos.json'
 };
 
 /** 读取 JSON（带内存缓存） */
@@ -67,4 +67,3 @@ export async function loadMathOutline() {
 export async function loadVideos() {
   return loadJson(DATA_PATHS.videos);
 }
-
